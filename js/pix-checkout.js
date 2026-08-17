@@ -21,6 +21,9 @@ async function gerarCheckoutTriboPay(event) {
 
 let intervaloPixStatus = null;
 
+// SVG do selo de verificado (mesmo usado no popup nativo da página)
+const PIX_SVG_VERIFICADO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" aria-label="Verificado"><path fill="#ff6b3d" d="M190.6 71.4C203 47.9 227.7 32 256 32s53 15.9 65.4 39.4c3.6 6.8 11.5 10.1 18.8 7.8c25.4-7.8 54.1-1.6 74.1 18.4s26.2 48.7 18.4 74.1c-2.3 7.3 1 15.2 7.8 18.8C464.1 203 480 227.7 480 256s-15.9 53-39.4 65.4c-6.8 3.6-10.1 11.5-7.8 18.8c7.8 25.4 1.6 54.1-18.4 74.1s-48.7 26.2-74.1 18.4c-7.3-2.3-15.2 1-18.8 7.8C309 464.1 284.3 480 256 480s-53-15.9-65.4-39.4c-3.6-6.8-11.5-10.1-18.8-7.8c-25.4 7.8-54.1 1.6-74.1-18.4s-26.2-48.7-18.4-74.1c2.3-7.3-1-15.2-7.8-18.8C47.9 309 32 284.3 32 256s15.9-53 39.4-65.4c6.8-3.6 10.1-11.5 7.8-18.8c-7.8-25.4-1.6-54.1 18.4-74.1s48.7-26.2 74.1-18.4c7.3 2.3 15.2-1 18.8-7.8zM256 0c-36.1 0-68 18.1-87.1 45.6c-33-6-68.3 3.8-93.9 29.4s-35.3 60.9-29.4 93.9C18.1 188 0 219.9 0 256s18.1 68 45.6 87.1c-6 33 3.8 68.3 29.4 93.9s60.9 35.3 93.9 29.4C188 493.9 219.9 512 256 512s68-18.1 87.1-45.6c33 6 68.3-3.8 93.9-29.4s35.3-60.9 29.4-93.9C493.9 324 512 292.1 512 256s-18.1-68-45.6-87.1c6-33-3.8-68.3-29.4-93.9s-60.9-35.3-93.9-29.4C324 18.1 292.1 0 256 0zM363.3 203.3c6.2-6.2 6.2-16.4 0-22.6s-16.4-6.2-22.6 0L224 297.4l-52.7-52.7c-6.2-6.2-16.4-6.2-22.6 0s-6.2 16.4 0 22.6l64 64c6.2 6.2 16.4 6.2 22.6 0l128-128z"/></svg>`;
+
 // ---------- Captura dos parâmetros UTM da URL (pra atribuição de campanha) ----------
 
 function pegarParametrosUtm() {
@@ -75,15 +78,43 @@ function abrirModalPix({ amount, offerHash, productHash, title }) {
   overlay.innerHTML = `
     <div class="pix-modal">
       <button type="button" class="pix-modal-fechar" aria-label="Fechar">×</button>
-      <div class="pix-banner" style="background-image: url('images/bannerlara.png')"></div>
+
+      <div class="pix-cover">
+        <img src="images/bannerlara.png" alt="" />
+      </div>
+
+      <div class="pix-profile-row">
+        <div class="pix-avatar">
+          <img src="images/perfil1.png" alt="Lara Jucah" />
+        </div>
+        <div class="pix-profile-text">
+          <div class="pix-profile-name">Lara Jucah ${PIX_SVG_VERIFICADO}</div>
+          <div class="pix-profile-username">@larajucah</div>
+        </div>
+      </div>
+
       <div class="pix-modal-body">
-        <h3>${title}</h3>
-        <p class="pix-valor">R$ ${(amount / 100).toFixed(2).replace('.', ',')}</p>
+        <ul class="pix-beneficios">
+          <li><i class="fas fa-check"></i> Acesso a todos conteúdos exclusivos</li>
+          <li><i class="fas fa-check"></i> Chat ao vivo com a Lara Jucah</li>
+          <li><i class="fas fa-check"></i> E muito mais...</li>
+        </ul>
+
+        <div class="pix-plano">
+          <span class="pix-plano-nome">${title}</span>
+          <span class="pix-valor">R$ ${(amount / 100).toFixed(2).replace('.', ',')}</span>
+        </div>
+
         <form id="pix-form">
           <input type="email" id="pix-email" placeholder="Seu melhor e-mail" required />
           <button type="submit">Gerar QR Code PIX</button>
         </form>
-        <p class="pix-seguro">🔒 Pagamento 100% seguro via PIX</p>
+
+        <div class="pix-trust-row">
+          <span><i class="fas fa-lock"></i> Pagamento 100% seguro</span>
+          <span><i class="fas fa-bolt"></i> Acesso imediato</span>
+        </div>
+
         <div id="pix-resultado"></div>
       </div>
     </div>
@@ -137,6 +168,11 @@ function mostrarQrCode(dados) {
   const copiaECola = dados.pix?.pix_qr_code || dados.pix?.qr_code || dados.pix_qr_code;
   const hash = dados.hash || dados.transaction_hash;
 
+  // Esconde o formulário de e-mail e os badges de confiança (já cumpriram o papel deles)
+  document.getElementById('pix-form').style.display = 'none';
+  const trustRow = document.querySelector('.pix-trust-row');
+  if (trustRow) trustRow.style.display = 'none';
+
   const resultado = document.getElementById('pix-resultado');
 
   if (!copiaECola) {
@@ -149,10 +185,11 @@ function mostrarQrCode(dados) {
 
   // Geramos a imagem do QR Code a partir do próprio código copia-e-cola —
   // assim não dependemos do campo (às vezes inconsistente) que a TriboPay manda.
-  const qrImagemSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(copiaECola)}`;
+  const qrImagemSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(copiaECola)}`;
 
   resultado.innerHTML = `
     <div class="pix-qr">
+      <p class="pix-formas-label">Formas de pagamento</p>
       <img class="pix-qr-img" src="${qrImagemSrc}" alt="QR Code PIX" />
       <p class="pix-copia-label">Escaneie ou copie o código:</p>
       <div class="pix-copia-cola">
