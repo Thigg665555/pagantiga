@@ -75,7 +75,7 @@ function abrirModalPix({ amount, offerHash, productHash, title }) {
   overlay.innerHTML = `
     <div class="pix-modal">
       <button type="button" class="pix-modal-fechar" aria-label="Fechar">×</button>
-      <div class="pix-banner" style="background-image: url('images/capa.png')"></div>
+      <div class="pix-banner" style="background-image: url('images/bannerlara.png')"></div>
       <div class="pix-modal-body">
         <h3>${title}</h3>
         <p class="pix-valor">R$ ${(amount / 100).toFixed(2).replace('.', ',')}</p>
