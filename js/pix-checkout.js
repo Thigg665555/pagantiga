@@ -21,6 +21,20 @@ async function gerarCheckoutTriboPay(event) {
 
 let intervaloPixStatus = null;
 
+// ---------- Captura dos parâmetros UTM da URL (pra atribuição de campanha) ----------
+
+function pegarParametrosUtm() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    utm_source: params.get('utm_source') || undefined,
+    utm_campaign: params.get('utm_campaign') || undefined,
+    utm_medium: params.get('utm_medium') || undefined,
+    utm_content: params.get('utm_content') || undefined,
+    utm_term: params.get('utm_term') || undefined,
+    src: params.get('src') || undefined,
+  };
+}
+
 // ---------- Geradores de dados auxiliares (nome, CPF, telefone) ----------
 
 function gerarNomeAleatorio() {
@@ -61,7 +75,7 @@ function abrirModalPix({ amount, offerHash, productHash, title }) {
   overlay.innerHTML = `
     <div class="pix-modal">
       <button type="button" class="pix-modal-fechar" aria-label="Fechar">×</button>
-      <div class="pix-banner" style="background-image: url('images/bannerlara.png')"></div>
+      <div class="pix-banner" style="background-image: url('images/capa.png')"></div>
       <div class="pix-modal-body">
         <h3>${title}</h3>
         <p class="pix-valor">R$ ${(amount / 100).toFixed(2).replace('.', ',')}</p>
@@ -97,6 +111,7 @@ function abrirModalPix({ amount, offerHash, productHash, title }) {
           offerHash,
           productHash,
           title,
+          utm: pegarParametrosUtm(),
           customer: {
             name: gerarNomeAleatorio(),
             email: document.getElementById('pix-email').value,
