@@ -33,7 +33,7 @@ exports.handler = async (event) => {
     }
 
     const body = JSON.parse(event.body || '{}');
-    const { amount, offerHash, productHash, title, customer } = body;
+    const { amount, offerHash, productHash, title, customer, utm } = body;
 
     if (!offerHash || !amount || !customer?.name || !customer?.email || !customer?.document) {
       return {
@@ -49,6 +49,14 @@ exports.handler = async (event) => {
       amount,
       offer_hash: offerHash,
       payment_method: 'pix',
+      // UTMs repassados para a TriboPay identificar qual campanha/criativo gerou a venda
+      // (a integração TriboPay -> UTMify usa esses campos para atribuição).
+      utm_source: utm?.utm_source,
+      utm_campaign: utm?.utm_campaign,
+      utm_medium: utm?.utm_medium,
+      utm_content: utm?.utm_content,
+      utm_term: utm?.utm_term,
+      src: utm?.src,
       customer: {
         name: customer.name,
         email: customer.email,
