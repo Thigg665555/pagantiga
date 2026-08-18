@@ -1,5 +1,5 @@
 // netlify/functions/pix-webhook.js
-const fetch = require('node-fetch');
+// Usa o fetch nativo do Node (disponível a partir do Node 18), sem dependências externas.
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
